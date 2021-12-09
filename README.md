@@ -1,32 +1,101 @@
 # Neuralmed - Desafio para engenharia de dados
 
 Aqui na Neuralmed trabalhamos com grande quantidade de dados relativos a exames e 
-laudos médicos. Esses dados precisam ser organizados em um `datalake` para serem utilizados para alguns propósitos:
+laudos médicos. Esses dados precisam ser organizados em um `datalake`.
 
-1. Todos os usuários do datalake devem enxergar onde estão os dados e conseguem consumi-los de maneira fácil
-2. Cientistas de dados precisam dos dados de exames, laudos e seus arquivos originais (imagens ou pdfs) para treinamento de modelos
-3. Analista de dados precisam analisar a execução de cada modelo para medir uso da plataforma e gerar novos insights
-4. Cada exame possui múltiplos labels e eles são usados como filtro para treinamento e algumas análises
+Você receberá em anexo o arquivo `data.zip`. Dentro perceberá a seguinte estrutura:
+- exam
+- medical_report
 
-Dado esse resumo super simplificado, no diretório "data", você encontrará uma amostra de dados, sendo:
-- "exam": Diretório com exames que foram enviados para o datalake 
-- "medical_report": Diretório com laudos
-- "images: Diretório com imagens do exame
+Precisamos alimentar essas tabelas do datalake.
 
-Todas as tarefas abaixo serão usadas para discussão na entrevista e para entendermos a experiência que possui com datalakes, ingestão e consumo de dados. Para esse desafio queremos:
+---
+**Exam**:
 
-1. Uma modelagem desses dados no datalake da maneira que achar mais interessante. Como armazenar, como transformar os dados e como consultar. 
-Pode fazer um desenho da arquitetura e não precisa implementar nada dessa parte. 
+|  column       |   type  |
+|---------------|---------|
+| id            |  string |
+| source        |  string |
+| dataset_type  |  string |
+| dataset       |  string |
+| body_part     |  string |
+| image_path    |  string |
 
-2. Usando a linguagem que achar mais interessante e sua arquitetura desenhada acima, transforme os dados JSON de entrada no formato mais adequado, pensando em escalabilidade e na manutenção do código.
+---
+**Label**:
 
-3. Descreva como podemos acessar a quantidade de exames com label = 'Covid' e sem label 'Pneumonia' no mês de 12/2021. 
+|    column            |    type  |
+|----------------------|----------|
+| exam_id              |  string  |
+| classification       |  string  |
+| labelled_by          |  string  |
+| labelled_date        |  date    |
+| labelling_method     |  string  |
+| classification_type  |  string  |
+| value                |  boolean |
 
-4. Descreva como podemos acessar uma amostra de exames e suas imagens com body_part = 'Chest' e com mais de 5 labels informados.
+---
+**Medical Report**:
+|  column      |   type  |
+|--------------|---------|
+| exam_id      |  string |
+| report_date  |  date   |
+| reported_by  |  string |
+| text         |  string |
+---
+
+Tarefas:
+
+1. Crie um script/job usando a linguagem que se sentir mais confortável (entre python, scala ou java) para ler os dados desse .zip e carregar nas tabelas acima.
+2. Crie consultas SQL para responder as seguintes perguntas:
+   
+   2.1) Dado que o número de classificações de label que temos é 5, defina a % de completude, e retorne a quantidade de exames que temos com menos de 25%
+
+      Amostra do cálculo de completude:
+
+      | id      |  labels                                               |  completude |
+      |---------|-------------------------------------------------------|-------------|
+      |  1      |  ["covid19", "edema", "tumor", "hernia", "mass"]      |   100%      |
+      |  2      |  []                                                   |   0%        |
+      |  3      |  ["covid19"]                                          |   20%       |
+
+   2.2) Calcular os labels agregados, unindo classificações duplicadas baseadas em seu score, considerando:
+      - Labels de physician valem 10
+      - Labels de ml_model valem 5
+   
+   Quando o score zerar (nem False nem True "vencem"), remover o label do resultado.
+      
+   Precisamos de um resultado com id do exame, label, value e seu score.
+
+   Passo a passo (somente para clareza do problema):
+   1. Defina o score:
+
+   
+      | id      |  label         |   labelling_method   |   value    |   score |
+      |---------|----------------|----------------------|------------|---------|
+      |  1      |  "covid19"     |   ml_model           |   True     |       5 |
+      |  1      |  "covid19"     |   physician          |   True     |      10 |
+      |  1      |  "covid19"     |   ml_model           |   False    |       5 |
+      |  2      |  "covid19"     |   ml_model           |   False    |       5 |
+      |  2      |  "hernia"      |   physician          |   True     |      10 |
+      |  2      |  "hernia"      |   physician          |   False    |      10 |
+      |  2      |  "mass"        |   physician          |   False    |      10 |
+      |  2      |  "mass"        |   ml_model           |   True     |       5 |
+
+
+   2. Agregue os labels (esse é o resultado desejado)
+
+      | id      |  label         |   value    |   score |
+      |---------|----------------|------------|---------|
+      |  1      |  "covid19"     |   True     |      10 |
+      |  2      |  "covid19"     |   False    |       5 |
+      |  2      |  "mass"        |   False    |       5 |
 
 Importante: 
-
-- Não existe certo e errado na solução acima. Vamos analisar desempenho, escalabilidade, manutenção de código, clareza de código, testes e documentação. O README deve estar explicando como rodar com clareza e preferencialmente dockerizável.
-Se precisar instalar uma biblioteca como pydantic ou poetry (somente exemplos), explique o que fez usá-la.
-
-- Por mais que isso será útil no trabalho, não queremos um ambiente na GCP ou AWS. A análise é sobre o seu código e tudo deve funcionado desacoplado de bancos de dados e ambientes em nuvem.
+- Mantenha o código claro e bem documentado (README);
+- Valorizamos bastante a criação de testes unitários / de integração;
+- Você pode fazer o desafio em um repositório github privado e dar permissão para gente ou mande um .zip;
+- De preferência, use docker para que possamos executar sem precisar seguir um passo a passo de instalação;
+- Não queremos uma solução que envolva uma arquitetura complexa, acessar um banco de dados remoto ou algo em cloud. Explique a solução realizada e porque foi feito dessa maneira.
+- Vamos avaliar a performance e escalabilidade, considerando que essa quantidade de dados pode crescer rapidamente.
+- Esse código será usado para a entrevista, onde vamos discutir a solução adotada e possíveis melhorias.
