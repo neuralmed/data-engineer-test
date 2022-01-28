@@ -98,4 +98,3 @@ Importante:
 - De preferência, use docker para que possamos executar sem precisar seguir um passo a passo de instalação;
 - Não queremos uma solução que envolva uma arquitetura complexa, acessar um banco de dados remoto ou algo em cloud. Explique a solução realizada e porque foi feito dessa maneira.
 - Vamos avaliar a performance e escalabilidade, considerando que essa quantidade de dados pode crescer rapidamente.
-- Esse código será usado para a entrevista, onde vamos discutir a solução adotada e possíveis melhorias.
