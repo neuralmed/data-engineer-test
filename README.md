@@ -46,8 +46,8 @@ Precisamos alimentar essas tabelas do datalake.
 
 Tarefas:
 
-1. Crie um script/job usando a linguagem que se sentir mais confortável (entre python, scala ou java) para ler os dados desse .zip e carregar nas tabelas acima.
-2. Crie consultas SQL para responder as seguintes perguntas:
+1. Crie um script/job usando preferencialmente pyspark (também podendo usar python ou sql) para ler os dados desse .zip e carregar nas tabelas acima.
+2. Crie o código para responder as seguintes perguntas (podendo ser em SQL, python ou pyspark, o que considerar mais otimizado):
    
    2.1) Dado que o número de classificações de label que temos é 5, defina a % de completude, e retorne a quantidade de exames que temos com menos de 25%
 
